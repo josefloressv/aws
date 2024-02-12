@@ -2,3 +2,6 @@
 .terraform
 .terraform.lock.hcl
 terraform.tfstate*
+
+# Temp folder
+tmp/*
