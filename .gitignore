@@ -5,3 +5,9 @@ terraform.tfstate*
 
 # Temp folder
 tmp/*
+
+# NodeJs
+node_modules
+
+# Ignore Infracost cache
+.infracost
