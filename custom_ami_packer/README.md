@@ -38,3 +38,5 @@ ToDO
 * Create a Security Group for the new EC2 instance and allow HTTP
 * Automate the creation for the SG with CloudFormation
 * Add variable customization to the Packer template
+
+Reference: https://aws.amazon.com/blogs/mt/creating-packer-images-using-system-manager-automation/
