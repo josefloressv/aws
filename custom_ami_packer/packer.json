@@ -1,0 +1,43 @@
+{
+    "builders": [
+      {
+        "type": "amazon-ebs",
+        "region": "us-east-1",
+        "source_ami": "ami-085ad6ae776d8f09c",
+        "instance_type": "t3.medium",
+        "ssh_username": "ec2-user",
+        "ami_name": "packer-testing-ebs-{{isotime | clean_resource_name}}",
+        "ssh_timeout": "5m",
+        "iam_instance_profile": "SSMAutomationPackerCF",
+        "vpc_id": "vpc-03c4f80f8b73727b8",
+        "subnet_id": "subnet-04382cb4a618aa6d4",
+        "security_group_id": "sg-0cb7de04f63e260b8",
+        "associate_public_ip_address": true,
+        "run_tags": {
+          "Name": "web-server-packer"
+        },
+        "tags": {
+          "Name": "webserver"
+        }
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "shell",
+        "inline": [
+            "sudo yum update -y",
+            "sudo dnf upgrade -y",
+            "sudo dnf install -y httpd mariadb105-server php",
+            "sudo systemctl start httpd",
+            "sudo systemctl enable httpd",
+            "sudo systemctl start mariadb",
+            "sudo systemctl enable mariadb",
+            "sudo usermod -a -G apache ec2-user",
+            "sudo chown -R ec2-user:apache /var/www",
+            "sudo chmod 2775 /var/www && find /var/www -type d -exec sudo chmod 2775 {} \\;",
+            "find /var/www -type f -exec sudo chmod 0664 {} \\;",
+            "echo \"<?php phpinfo(); ?>\" > /var/www/html/phpinfo.php"
+        ]
+      }
+    ]
+  }

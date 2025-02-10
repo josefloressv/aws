@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Template to create sample IAM role to execute packer automation using SSM"
+Parameters: 
+  PackerTemplateS3BucketLocation: 
+    Type: String
+    Description: Enter the name of the bucket where the packer templates will be stored. This is used to add permissions to the policy. For example, my-packer-bucket
+Resources:
+    SSMAutomationPackerRole:
+        Type: "AWS::IAM::Role"
+        Properties:
+            RoleName: "SSMAutomationPackerCF"
+            ManagedPolicyArns: [
+              'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole'
+            ]
+            AssumeRolePolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                  - 
+                    Effect: "Allow"
+                    Action: 
+                      - "sts:AssumeRole"
+                    Principal: 
+                        Service: 
+                          - "ec2.amazonaws.com"
+                          - "ssm.amazonaws.com"
+
+    SSMAutomationPackerInstanceProfile:
+        Type: "AWS::IAM::InstanceProfile"
+        Properties:
+            InstanceProfileName: "SSMAutomationPackerCF"
+            Roles:
+              - !Ref SSMAutomationPackerRole
+
+    SSMAutomationPackerInlinePolicy:
+        Type: "AWS::IAM::Policy"
+        Properties:
+            PolicyName: "SSMAutomationPackerInline"
+            PolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                  - 
+                    Effect: "Allow"
+                    Action: 
+                      - "iam:GetInstanceProfile"
+                    Resource: 
+                      - "arn:aws:iam::*:instance-profile/*"
+                  - 
+                    Effect: "Allow"
+                    Action: 
+                      - "logs:CreateLogStream"
+                      - "logs:DescribeLogGroups"
+                    Resource: 
+                      - "arn:aws:logs:*:*:log-group:*"
+                  - 
+                    Effect: "Allow"
+                    Action: 
+                      - "s3:ListBucket"
+                    Resource: 
+                      - !Sub 'arn:aws:s3:::${PackerTemplateS3BucketLocation}'
+                  - 
+                    Effect: "Allow"
+                    Action: 
+                      - "s3:GetObject"
+                    Resource: 
+                      - !Sub 'arn:aws:s3:::${PackerTemplateS3BucketLocation}/*'
+                  - 
+                    Effect: "Allow"
+                    Action: 
+                      - "ec2:DescribeInstances"
+                      - "ec2:CreateKeyPair"
+                      - "ec2:DescribeRegions"
+                      - "ec2:DescribeVolumes"
+                      - "ec2:DescribeSubnets"
+                      - "ec2:DeleteKeyPair"
+                      - "ec2:DescribeSecurityGroups"
+                    Resource: 
+                      - "*"
+            Roles: 
+              - !Ref SSMAutomationPackerRole
+
+    SSMAutomationPackerPassrolePolicy:
+        Type: "AWS::IAM::Policy"
+        Properties:
+            PolicyName: "SSMAutomationPackerPassrole"
+            PolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                  - 
+                    Sid: "SSMAutomationPackerPassrolePolicy"
+                    Effect: "Allow"
+                    Action: "iam:PassRole"
+                    Resource: !GetAtt SSMAutomationPackerRole.Arn
+            Roles: 
+              - !Ref SSMAutomationPackerRole
